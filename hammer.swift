@@ -1,3 +1,4 @@
+
 import Foundation
 import Network
 import CoreML
@@ -5,242 +6,235 @@ import CoreML
 // MARK: - Temporal Variable Tracker
 
 class TimeVariable<T> {
-	private var history: [T] = []
-	
-	var value: T {
-		didSet {
-			history.append(value)
-		}
-	}
+    private var history: [T] = []
 
-	init(initial: T) {
-		self.value = initial
-		history.append(initial)
-	}
+    var value: T {
+        didSet {
+            history.append(value)
+        }
+    }
 
-	func rewind(by steps: Int = 1) {
-		let index = max(0, history.count - steps - 1)
-		value = history[index]
-		print("🔄 Rewound value to: \(value)")
-	}
+    init(initial: T) {
+        self.value = initial
+        history.append(initial)
+    }
 
-	func historyDump() -> [T] {
-		return history
-	}
+    func rewind(by steps: Int = 1) {
+        let index = max(0, history.count - steps - 1)
+        value = history[index]
+        print("🔄 Rewound value to: \(value)")
+    }
+
+    func historyDump() -> [T] {
+        return history
+    }
 }
 
 // MARK: - Logic Mutation (Function Swapping)
 
 class FunctionSwapper {
-	private var logic: () -> Void
+    private var logic: () -> Void
 
-	init(initialLogic: @escaping () -> Void) {
-		self.logic = initialLogic
-	}
+    init(initialLogic: @escaping () -> Void) {
+        self.logic = initialLogic
+    }
 
-	func run() {
-		logic()
-	}
+    func run() {
+        logic()
+    }
 
-	func mutate(newLogic: @escaping () -> Void) {
-		print("🛠️ Logic mutated!")
-		logic = newLogic
-	}
+    func mutate(newLogic: @escaping () -> Void) {
+        print("🛠️ Logic mutated!")
+        logic = newLogic
+    }
 }
 
 // MARK: - Multiverse Execution (Reality Forks)
 
 enum Timeline: String {
-	case alpha, omega, quarantine
+    case alpha, beta, omega
 }
 
 class RealityFork {
-	var current: Timeline = .alpha
-	private var branches: [Timeline: () -> Void] = [:]
+    var current: Timeline = .alpha
+    private var branches: [Timeline: () -> Void] = [:]
 
-	func register(_ timeline: Timeline, logic: @escaping () -> Void) {
-		branches[timeline] = logic
-	}
+    func register(_ timeline: Timeline, logic: @escaping () -> Void) {
+        branches[timeline] = logic
+    }
 
-	func switchTo(_ timeline: Timeline) {
-		current = timeline
-		print("🌐 Timeline switched to: \(timeline.rawValue)")
-	}
+    func switchTo(_ timeline: Timeline) {
+        current = timeline
+        print("🌐 Timeline switched to: \(timeline.rawValue)")
+    }
 
-	func run() {
-		print("🧪 Executing timeline: \(current.rawValue)")
-		if let branch = branches[current] {
-			branch()
-		} else {
-			print("⚠️ No logic registered for timeline: \(current.rawValue)")
-		}
-	}
+    func run() {
+        print("🧪 Executing timeline: \(current.rawValue)")
+        if let branch = branches[current] {
+            branch()
+        } else {
+            print("⚠️ No logic registered for timeline: \(current.rawValue)")
+        }
+    }
 }
 
-// MARK: - CoreML Model Wrapper (Dummy Model)
+// MARK: - CoreML Anomaly Detector
 
 class TrafficAnomalyDetector {
-	private var model: MLModel?
+    private let model: MLModel
 
-	init(modelURL: URL) {
-		do {
-			model = try MLModel(contentsOf: modelURL)
-		} catch {
-			print("⚠️ Failed to load ML model: \(error)")
-		}
-	}
+    init?() {
+        guard let url = Bundle.main.url(forResource: "TrafficAnomalyClassifier", withExtension: "mlmodelc"),
+              let loadedModel = try? MLModel(contentsOf: url) else {
+            print("❌ Failed to load ML model.")
+            return nil
+        }
+        self.model = loadedModel
+    }
 
-	func predictAnomaly(requestRate: Int) -> Bool {
-		guard let model = model else { return false }
-		let input = try? MLDictionaryFeatureProvider(dictionary: ["requestRate": requestRate as NSNumber])
-		guard let prediction = try? model.prediction(from: input!) else {
-			print("⚠️ Prediction failed")
-			return false
-		}
-		return prediction.featureValue(for: "isAnomalous")?.boolValue ?? false
-	}
+    func isAnomalous(rate: Int) -> Bool {
+        guard let input = try? MLMultiArray(shape: [1], dataType: .int32) else {
+            return false
+        }
+        input[0] = NSNumber(value: rate)
+
+        do {
+            let prediction = try model.prediction(from: MLDictionaryFeatureProvider(dictionary: ["input": input]))
+            if let value = prediction.featureValue(for: "isAnomalous")?.int64Value {
+                return value == 1
+            }
+        } catch {
+            print("❌ CoreML prediction error: \(error)")
+        }
+        return false
+    }
 }
 
 // MARK: - Hammer4D Defender Core
 
 class Hammer4DDefenderCore {
-	var requestRate = TimeVariable<Int>(initial: 0)
-	lazy var detectionLogic: FunctionSwapper = FunctionSwapper(initialLogic: {
-		print("🔍 Traffic normal.")
-	})
+    var requestRate = TimeVariable<Int>(initial: 0)
+    lazy var detectionLogic: FunctionSwapper = FunctionSwapper(initialLogic: {
+        print("🔍 Traffic normal.")
+    })
+    let realityFork = RealityFork()
+    let mlDetector = TrafficAnomalyDetector()
 
-	let realityFork = RealityFork()
-	let anomalyDetector: TrafficAnomalyDetector
+    init() {
+        realityFork.register(.alpha) {
+            print("🌱 Alpha Fork: Normalized behavior profile.")
+        }
+        realityFork.register(.omega) {
+            print("🔥 Omega Fork: Polymorphic logic running...")
+        }
+    }
 
-	init(modelURL: URL) {
-		self.anomalyDetector = TrafficAnomalyDetector(modelURL: modelURL)
-		realityFork.register(.alpha) {
-			print("🌱 Alpha Fork: Normal behavior.")
-		}
-		realityFork.register(.omega) {
-			print("🔥 Omega Fork: Elevated monitoring...")
-		}
-		realityFork.register(.quarantine) {
-			print("🚫 Quarantine mode: Blocking suspicious IPs...")
-		}
-	}
+    func analyzeTraffic(rate: Int) {
+        requestRate.value = rate
+        print("📈 Request Rate: \(rate)/sec")
 
-	func analyzeTraffic(rate: Int) {
-		requestRate.value = rate
-		print("📈 Request Rate: \(rate)/sec")
-
-		if anomalyDetector.predictAnomaly(requestRate: rate) {
-			print("🚨 Anomaly detected by ML model!")
-			requestRate.rewind()
-			detectionLogic.mutate(newLogic: {
-				print("🧠 Adaptive logic engaged!")
-			})
-			realityFork.switchTo(.quarantine)
-		} else if rate > 200 {
-			print("⚠️ High traffic detected!")
-			realityFork.switchTo(.omega)
-		} else {
-			detectionLogic.mutate(newLogic: {
-				print("🔍 Traffic normal.")
-			})
-			realityFork.switchTo(.alpha)
-		}
-
-		realityFork.run()
-	}
+        if mlDetector?.isAnomalous(rate: rate) == true || rate > 200 {
+            print("🚨 Anomaly or High traffic detected!")
+            requestRate.rewind()
+            detectionLogic.mutate(newLogic: {
+                print("🧠 Detection logic mutated!")
+            })
+            realityFork.switchTo(.omega)
+            realityFork.run()
+        } else {
+            realityFork.switchTo(.alpha)
+            detectionLogic.mutate(newLogic: {
+                print("🔍 Traffic normal.")
+            })
+            realityFork.run()
+        }
+    }
 }
 
 // MARK: - TCP Listener for Real Network Input
 
 class TCPListener {
-	private let port: NWEndpoint.Port = 8080
-	private var listener: NWListener?
-	private var connectionCountThisSecond = 0
-	private var defender: Hammer4DDefenderCore
-	private var timer: DispatchSourceTimer?
+    private let port: NWEndpoint.Port = 8080
+    private var listener: NWListener?
+    private var connectionCountThisSecond = 0
+    private var defender: Hammer4DDefenderCore
+    private var timer: DispatchSourceTimer?
 
-	init(defender: Hammer4DDefenderCore) {
-		self.defender = defender
-	}
+    init(defender: Hammer4DDefenderCore) {
+        self.defender = defender
+    }
 
-	func start() {
-		do {
-			listener = try NWListener(using: .tcp, on: port)
-		} catch {
-			print("❌ Failed to create listener: \(error)")
-			return
-		}
+    func start() {
+        do {
+            listener = try NWListener(using: .tcp, on: port)
+        } catch {
+            print("❌ Failed to create listener: \(error)")
+            return
+        }
 
-		listener?.stateUpdateHandler = { state in
-			switch state {
-			case .ready:
-				print("📡 Listening on TCP port \(self.port)...")
-			case .failed(let error):
-				print("❌ Listener failed with error: \(error)")
-				self.stop()
-			default:
-				break
-			}
-		}
+        listener?.stateUpdateHandler = { state in
+            switch state {
+            case .ready:
+                print("📡 Listening on TCP port \(self.port)...")
+            case .failed(let error):
+                print("❌ Listener failed with error: \(error)")
+                self.stop()
+            default:
+                break
+            }
+        }
 
-		listener?.newConnectionHandler = { [weak self] connection in
-			guard let self = self else { return }
-			self.connectionCountThisSecond += 1
-			self.handleConnection(connection)
-		}
+        listener?.newConnectionHandler = { [weak self] connection in
+            guard let self = self else { return }
+            self.connectionCountThisSecond += 1
+            self.handleConnection(connection)
+        }
 
-		listener?.start(queue: .main)
+        listener?.start(queue: .main)
 
-		timer = DispatchSource.makeTimerSource(queue: .main)
-		timer?.schedule(deadline: .now() + 1, repeating: 1)
-		timer?.setEventHandler { [weak self] in
-			guard let self = self else { return }
-			let rate = self.connectionCountThisSecond
-			self.connectionCountThisSecond = 0
-			print("\n⏱️ Second:")
-			self.defender.analyzeTraffic(rate: rate)
-		}
-		timer?.resume()
-	}
+        timer = DispatchSource.makeTimerSource(queue: .main)
+        timer?.schedule(deadline: .now() + 1, repeating: 1)
+        timer?.setEventHandler { [weak self] in
+            guard let self = self else { return }
+            let rate = self.connectionCountThisSecond
+            self.connectionCountThisSecond = 0
+            print("\n⏱️ Second:")
+            self.defender.analyzeTraffic(rate: rate)
+        }
+        timer?.resume()
+    }
 
-	func handleConnection(_ connection: NWConnection) {
-		connection.stateUpdateHandler = { state in
-			switch state {
-			case .ready:
-				break
-			case .failed(let error):
-				print("❌ Connection failed: \(error)")
-			case .cancelled:
-				break
-			default:
-				break
-			}
-		}
-		connection.start(queue: .main)
-	}
+    func handleConnection(_ connection: NWConnection) {
+        connection.stateUpdateHandler = { state in
+            switch state {
+            case .ready:
+                break
+            case .failed(let error):
+                print("❌ Connection failed: \(error)")
+            case .cancelled:
+                break
+            default:
+                break
+            }
+        }
+        connection.start(queue: .main)
+    }
 
-	func stop() {
-		listener?.cancel()
-		timer?.cancel()
-		print("🛑 Listener stopped.")
-	}
+    func stop() {
+        listener?.cancel()
+        timer?.cancel()
+        print("🛑 Listener stopped.")
+    }
 }
 
 // MARK: - Main
 
 func main() {
-	print("=== 🛡 Hammer4D Defender with CoreML Integration ===")
-
-	guard let modelURL = Bundle.main.url(forResource: "TrafficAnomalyClassifier", withExtension: "mlmodelc") else {
-		print("❌ ML model not found.")
-		return
-	}
-
-	let defender = Hammer4DDefenderCore(modelURL: modelURL)
-	let tcpListener = TCPListener(defender: defender)
-
-	tcpListener.start()
-	RunLoop.main.run()
+    print("=== 🛡 Hammer4D Defender v4 with CoreML Anomaly Detection ===")
+    let defender = Hammer4DDefenderCore()
+    let tcpListener = TCPListener(defender: defender)
+    tcpListener.start()
+    RunLoop.main.run()
 }
 
 main()
