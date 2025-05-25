@@ -30,8 +30,7 @@ Ensure you are using **Xcode 14+** and **Swift 5.7+**.
 
 3. **Add CoreML Model**
 
-Download or generate a CoreML `.mlmodel` and add it to your project:
-- [🔗 Download Example: `AnomalyDetector.mlmodel`](https://github.com/alexanderdfox/HammerTime/releases)
+Generate a CoreML `.mlmodel` and add it to your project:
 
 Make sure your model has:
 - **Input:** `request_rate` (`Double`)
@@ -39,7 +38,7 @@ Make sure your model has:
 
 ---
 
-## 🧠 Train Your Own Anomaly Model (Optional)
+## 🧠 Train Your Own Anomaly Model 
 
 You can generate your own `.mlmodel` using the provided Python script in [`/ml_model`](ml_model/). It uses `IsolationForest` from scikit-learn.
 
