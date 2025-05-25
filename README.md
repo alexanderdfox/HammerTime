@@ -1,89 +1,94 @@
+# 🛡 HammerTime: Hammer4D Defender
 
-# Hammer4D Defender v3
-
-## Overview
-
-Hammer4D Defender is an experimental network defense prototype written in Swift. It monitors real-time TCP connection rates on port 8080 and dynamically adapts its detection logic using advanced concepts like temporal tracking, logic mutation, and multiverse execution (reality forks).
-
-It aims to demonstrate adaptive cybersecurity defenses that respond to suspicious traffic spikes by mutating defense logic and switching between defense timelines.
+**HammerTime** is a Swift-based, real-time anti-DDoS and threat detection system. It monitors TCP traffic, tracks connection rates temporally, detects anomalies via a CoreML model, and mutates defensive logic in response to detected threats — simulating a multi-timeline defense strategy.
 
 ---
 
-## Features
+## 🚀 Features
 
-- Real-time monitoring of incoming TCP connections.
-- Tracks requests per second with temporal history and rewind capability.
-- Dynamic mutation of detection logic based on traffic conditions.
-- Multiple timeline strategies for adaptive defense.
-- Console output for live monitoring and state transitions.
-
----
-
-## Requirements
-
-- macOS or Linux system.
-- Swift 5.6 or newer installed.
-- Permission to bind TCP port 8080.
+- 🔍 **Real-time TCP connection rate monitoring**
+- ⏳ **TimeVariable tracking** with rewind capabilities
+- 🧬 **FunctionSwapper** for logic mutation under attack
+- 🌐 **RealityFork** timeline-based execution (e.g. alpha, omega)
+- 🧠 **CoreML integration** to detect anomalous network behavior
+- 🔁 Auto-adapts to normal or polymorphic traffic patterns
 
 ---
 
-## Installation & Running
+## 📦 Installation
 
-1. Clone or download the project source code.
+1. **Clone the repo**
 
-2. Open terminal and navigate to the project directory.
+```bash
+git clone https://github.com/alexanderdfox/HammerTime.git
+cd HammerTime
+```
 
-3. Build the project:
+2. **Open in Xcode**
 
-   ```bash
-   swift build
-   ```
+Ensure you are using **Xcode 14+** and **Swift 5.7+**.
 
-4. Run the executable:
+3. **Add CoreML Model**
 
-   ```bash
-   swift run
-   ```
+Download or generate a CoreML `.mlmodel` and add it to your project:
+- [🔗 Download Example: `AnomalyDetector.mlmodel`](https://github.com/alexanderdfox/HammerTime/releases)
 
-5. The program will start listening on TCP port 8080 and print logs to the console.
-
-6. To test, generate TCP connections to port 8080, for example:
-
-   ```bash
-   nc localhost 8080
-   ```
-
-   Opening many connections quickly will trigger high traffic detection and logic mutation.
+Make sure your model has:
+- **Input:** `request_rate` (`Double`)
+- **Output:** `isAnomalous` (`Int` or `Bool`)
 
 ---
 
-## Configuration
+## 🧠 Train Your Own Anomaly Model (Optional)
 
-- The high traffic detection threshold is currently set to 200 requests per second.
-- Change this value in `Hammer4DDefenderCore.analyzeTraffic(rate:)` if needed.
-- The listening port (default 8080) can be changed in the `TCPListener` class.
+You can generate your own `.mlmodel` using the provided Python script in [`/ml_model`](ml_model/). It uses `IsolationForest` from scikit-learn.
 
----
-
-## Limitations
-
-- Prototype only, not production-ready.
-- No real packet filtering or blocking implemented.
-- Only counts connection attempts, not traffic content.
-- Running on privileged ports may require elevated permissions.
+```bash
+cd ml_model
+python train_anomaly_model.py
+```
 
 ---
 
-## Contributing
+## 🛠 Usage
 
-Feel free to fork, enhance, or report issues via GitHub.
+Simply run the main Swift file:
+
+```bash
+swift run
+```
+
+Or hit the ▶️ **Run** button in Xcode. It starts a TCP listener on port **8080**, tracking traffic per second.
 
 ---
 
-## License
+## 🧪 Example Output
 
-Provided as-is for educational and prototyping purposes.
+```
+📡 Listening on TCP port 8080...
+⏱️ Second:
+📈 Request Rate: 23/sec
+🧪 Executing timeline: alpha
+🔍 Traffic normal.
+
+⏱️ Second:
+📈 Request Rate: 401/sec
+🚨 High traffic detected!
+🔁 Rewound value to: 23
+🛠️ Logic mutated!
+🌐 Timeline switched to: omega
+🔥 Omega Fork: Polymorphic logic running...
+```
 
 ---
 
-Enjoy exploring adaptive network defense powered by temporal logic! 🚀
+## 📄 License
+
+MIT License. See `LICENSE.md`.
+
+---
+
+## 👤 Author
+
+**Alexander D. Fox**  
+🔗 [github.com/alexanderdfox](https://github.com/alexanderdfox)
