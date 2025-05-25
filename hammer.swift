@@ -1,5 +1,6 @@
 import Foundation
 import Network
+import CoreML
 
 // MARK: - Temporal Variable Tracker
 
@@ -50,7 +51,7 @@ class FunctionSwapper {
 // MARK: - Multiverse Execution (Reality Forks)
 
 enum Timeline: String {
-	case alpha, beta, omega
+	case alpha, omega, quarantine
 }
 
 class RealityFork {
@@ -76,47 +77,76 @@ class RealityFork {
 	}
 }
 
+// MARK: - CoreML Model Wrapper (Dummy Model)
+
+class TrafficAnomalyDetector {
+	private var model: MLModel?
+
+	init(modelURL: URL) {
+		do {
+			model = try MLModel(contentsOf: modelURL)
+		} catch {
+			print("⚠️ Failed to load ML model: \(error)")
+		}
+	}
+
+	func predictAnomaly(requestRate: Int) -> Bool {
+		guard let model = model else { return false }
+		let input = try? MLDictionaryFeatureProvider(dictionary: ["requestRate": requestRate as NSNumber])
+		guard let prediction = try? model.prediction(from: input!) else {
+			print("⚠️ Prediction failed")
+			return false
+		}
+		return prediction.featureValue(for: "isAnomalous")?.boolValue ?? false
+	}
+}
+
 // MARK: - Hammer4D Defender Core
 
 class Hammer4DDefenderCore {
 	var requestRate = TimeVariable<Int>(initial: 0)
-	
 	lazy var detectionLogic: FunctionSwapper = FunctionSwapper(initialLogic: {
 		print("🔍 Traffic normal.")
 	})
-	
+
 	let realityFork = RealityFork()
-	
-	init() {
+	let anomalyDetector: TrafficAnomalyDetector
+
+	init(modelURL: URL) {
+		self.anomalyDetector = TrafficAnomalyDetector(modelURL: modelURL)
 		realityFork.register(.alpha) {
-			print("🌱 Alpha Fork: Normalized behavior profile.")
+			print("🌱 Alpha Fork: Normal behavior.")
 		}
 		realityFork.register(.omega) {
-			print("🔥 Omega Fork: Polymorphic logic running...")
+			print("🔥 Omega Fork: Elevated monitoring...")
+		}
+		realityFork.register(.quarantine) {
+			print("🚫 Quarantine mode: Blocking suspicious IPs...")
 		}
 	}
-	
+
 	func analyzeTraffic(rate: Int) {
 		requestRate.value = rate
 		print("📈 Request Rate: \(rate)/sec")
-		
-		if rate > 200 {
-			print("🚨 High traffic detected!")
+
+		if anomalyDetector.predictAnomaly(requestRate: rate) {
+			print("🚨 Anomaly detected by ML model!")
 			requestRate.rewind()
-			
 			detectionLogic.mutate(newLogic: {
-				print("🧠 Detection logic mutated!")
+				print("🧠 Adaptive logic engaged!")
 			})
-			
+			realityFork.switchTo(.quarantine)
+		} else if rate > 200 {
+			print("⚠️ High traffic detected!")
 			realityFork.switchTo(.omega)
-			realityFork.run()
 		} else {
-			realityFork.switchTo(.alpha)
 			detectionLogic.mutate(newLogic: {
 				print("🔍 Traffic normal.")
 			})
-			realityFork.run()
+			realityFork.switchTo(.alpha)
 		}
+
+		realityFork.run()
 	}
 }
 
@@ -140,7 +170,7 @@ class TCPListener {
 			print("❌ Failed to create listener: \(error)")
 			return
 		}
-		
+
 		listener?.stateUpdateHandler = { state in
 			switch state {
 			case .ready:
@@ -161,7 +191,6 @@ class TCPListener {
 
 		listener?.start(queue: .main)
 
-		// Timer fires every second to analyze connection count
 		timer = DispatchSource.makeTimerSource(queue: .main)
 		timer?.schedule(deadline: .now() + 1, repeating: 1)
 		timer?.setEventHandler { [weak self] in
@@ -178,7 +207,6 @@ class TCPListener {
 		connection.stateUpdateHandler = { state in
 			switch state {
 			case .ready:
-				// Optionally handle connection reads/writes here
 				break
 			case .failed(let error):
 				print("❌ Connection failed: \(error)")
@@ -201,13 +229,17 @@ class TCPListener {
 // MARK: - Main
 
 func main() {
-	print("=== 🛡 Hammer4D Defender v3 with real network input ===")
-	
-	let defender = Hammer4DDefenderCore()
+	print("=== 🛡 Hammer4D Defender with CoreML Integration ===")
+
+	guard let modelURL = Bundle.main.url(forResource: "TrafficAnomalyClassifier", withExtension: "mlmodelc") else {
+		print("❌ ML model not found.")
+		return
+	}
+
+	let defender = Hammer4DDefenderCore(modelURL: modelURL)
 	let tcpListener = TCPListener(defender: defender)
-	
+
 	tcpListener.start()
-	
 	RunLoop.main.run()
 }
 
