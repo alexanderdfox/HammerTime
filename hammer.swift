@@ -1,4 +1,3 @@
-
 import Foundation
 import Network
 import CoreML
@@ -154,13 +153,14 @@ class Hammer4DDefenderCore {
 // MARK: - TCP Listener for Real Network Input
 
 class TCPListener {
-    private let port: NWEndpoint.Port = 8080
+    private let port: NWEndpoint.Port
     private var listener: NWListener?
     private var connectionCountThisSecond = 0
     private var defender: Hammer4DDefenderCore
     private var timer: DispatchSourceTimer?
 
-    init(defender: Hammer4DDefenderCore) {
+    init(port: UInt16, defender: Hammer4DDefenderCore) {
+        self.port = NWEndpoint.Port(rawValue: port)!
         self.defender = defender
     }
 
@@ -168,7 +168,7 @@ class TCPListener {
         do {
             listener = try NWListener(using: .tcp, on: port)
         } catch {
-            print("❌ Failed to create listener: \(error)")
+            print("❌ Failed to create listener on port \(port): \(error)")
             return
         }
 
@@ -177,7 +177,7 @@ class TCPListener {
             case .ready:
                 print("📡 Listening on TCP port \(self.port)...")
             case .failed(let error):
-                print("❌ Listener failed with error: \(error)")
+                print("❌ Listener failed on port \(self.port): \(error)")
                 self.stop()
             default:
                 break
@@ -198,7 +198,7 @@ class TCPListener {
             guard let self = self else { return }
             let rate = self.connectionCountThisSecond
             self.connectionCountThisSecond = 0
-            print("\n⏱️ Second:")
+            print("\n⏱️ Port \(self.port) second tick:")
             self.defender.analyzeTraffic(rate: rate)
         }
         timer?.resume()
@@ -223,7 +223,7 @@ class TCPListener {
     func stop() {
         listener?.cancel()
         timer?.cancel()
-        print("🛑 Listener stopped.")
+        print("🛑 Listener stopped on port \(port).")
     }
 }
 
@@ -231,10 +231,24 @@ class TCPListener {
 
 func main() {
     print("=== 🛡 Hammer4D Defender v4 with CoreML Anomaly Detection ===")
-    let defender = Hammer4DDefenderCore()
-    let tcpListener = TCPListener(defender: defender)
-    tcpListener.start()
-    RunLoop.main.run()
+
+    let ports: [UInt16]
+    if CommandLine.arguments.count > 1 {
+        ports = CommandLine.arguments.dropFirst().compactMap { UInt16($0) }
+    } else {
+        ports = [8080, 8081, 9090] // Default ports
+    }
+
+    var listeners: [TCPListener] = []
+
+    for port in ports {
+        let defender = Hammer4DDefenderCore()
+        let listener = TCPListener(port: port, defender: defender)
+        listener.start()
+        listeners.append(listener)
+    }
+
+    dispatchMain() // Keep the main thread alive
 }
 
 main()
