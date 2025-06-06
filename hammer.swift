@@ -5,250 +5,301 @@ import CoreML
 // MARK: - Temporal Variable Tracker
 
 class TimeVariable<T> {
-    private var history: [T] = []
+	private var history: [T] = []
 
-    var value: T {
-        didSet {
-            history.append(value)
-        }
-    }
+	var value: T {
+		didSet {
+			history.append(value)
+		}
+	}
 
-    init(initial: T) {
-        self.value = initial
-        history.append(initial)
-    }
+	init(initial: T) {
+		self.value = initial
+		history.append(initial)
+	}
 
-    func rewind(by steps: Int = 1) {
-        let index = max(0, history.count - steps - 1)
-        value = history[index]
-        print("🔄 Rewound value to: \(value)")
-    }
+	func rewind(by steps: Int = 1) {
+		let index = max(0, history.count - steps - 1)
+		value = history[index]
+		print("🔄 Rewound value to: \(value)")
+	}
 
-    func historyDump() -> [T] {
-        return history
-    }
+	func historyDump() -> [T] {
+		return history
+	}
 }
 
 // MARK: - Logic Mutation (Function Swapping)
 
 class FunctionSwapper {
-    private var logic: () -> Void
+	private var logic: () -> Void
 
-    init(initialLogic: @escaping () -> Void) {
-        self.logic = initialLogic
-    }
+	init(initialLogic: @escaping () -> Void) {
+		self.logic = initialLogic
+	}
 
-    func run() {
-        logic()
-    }
+	func run() {
+		logic()
+	}
 
-    func mutate(newLogic: @escaping () -> Void) {
-        print("🛠️ Logic mutated!")
-        logic = newLogic
-    }
+	func mutate(newLogic: @escaping () -> Void) {
+		print("🛠️ Logic mutated!")
+		logic = newLogic
+	}
 }
 
 // MARK: - Multiverse Execution (Reality Forks)
 
 enum Timeline: String {
-    case alpha, beta, omega
+	case alpha, beta, omega
 }
 
 class RealityFork {
-    var current: Timeline = .alpha
-    private var branches: [Timeline: () -> Void] = [:]
+	var current: Timeline = .alpha
+	private var branches: [Timeline: () -> Void] = [:]
 
-    func register(_ timeline: Timeline, logic: @escaping () -> Void) {
-        branches[timeline] = logic
-    }
+	func register(_ timeline: Timeline, logic: @escaping () -> Void) {
+		branches[timeline] = logic
+	}
 
-    func switchTo(_ timeline: Timeline) {
-        current = timeline
-        print("🌐 Timeline switched to: \(timeline.rawValue)")
-    }
+	func switchTo(_ timeline: Timeline) {
+		current = timeline
+		print("🌐 Timeline switched to: \(timeline.rawValue)")
+	}
 
-    func run() {
-        print("🧪 Executing timeline: \(current.rawValue)")
-        if let branch = branches[current] {
-            branch()
-        } else {
-            print("⚠️ No logic registered for timeline: \(current.rawValue)")
-        }
-    }
+	func run() {
+		print("🧪 Executing timeline: \(current.rawValue)")
+		if let branch = branches[current] {
+			branch()
+		} else {
+			print("⚠️ No logic registered for timeline: \(current.rawValue)")
+		}
+	}
 }
 
 // MARK: - CoreML Anomaly Detector
 
 class TrafficAnomalyDetector {
-    private let model: MLModel
+	private let model: MLModel
 
-    init?() {
-        guard let url = Bundle.main.url(forResource: "TrafficAnomalyClassifier", withExtension: "mlmodelc"),
-              let loadedModel = try? MLModel(contentsOf: url) else {
-            print("❌ Failed to load ML model.")
-            return nil
-        }
-        self.model = loadedModel
-    }
+	init?() {
+		// Load compiled model from relative folder (adjust path as needed)
+		let currentDir = FileManager.default.currentDirectoryPath
+		let modelPath = URL(fileURLWithPath: currentDir)
+			.appendingPathComponent("CompiledModel")
+			.appendingPathComponent("AnomalyDetector.mlmodelc")
 
-    func isAnomalous(rate: Int) -> Bool {
-        guard let input = try? MLMultiArray(shape: [1], dataType: .int32) else {
-            return false
-        }
-        input[0] = NSNumber(value: rate)
+		guard let loadedModel = try? MLModel(contentsOf: modelPath) else {
+			print("❌ Failed to load compiled ML model at \(modelPath.path).")
+			return nil
+		}
+		self.model = loadedModel
+	}
 
-        do {
-            let prediction = try model.prediction(from: MLDictionaryFeatureProvider(dictionary: ["input": input]))
-            if let value = prediction.featureValue(for: "isAnomalous")?.int64Value {
-                return value == 1
-            }
-        } catch {
-            print("❌ CoreML prediction error: \(error)")
-        }
-        return false
-    }
+	func isAnomalous(rate: Int) -> Bool {
+		guard let input = try? MLMultiArray(shape: [1], dataType: .int32) else {
+			print("❌ Failed to create MLMultiArray input.")
+			return false
+		}
+		input[0] = NSNumber(value: rate)
+
+		do {
+			let prediction = try model.prediction(from: MLDictionaryFeatureProvider(dictionary: ["input": input]))
+			if let value = prediction.featureValue(for: "isAnomalous")?.int64Value {
+				return value == 1
+			}
+		} catch {
+			print("❌ CoreML prediction error: \(error)")
+		}
+		return false
+	}
 }
 
 // MARK: - Hammer4D Defender Core
 
 class Hammer4DDefenderCore {
-    var requestRate = TimeVariable<Int>(initial: 0)
-    lazy var detectionLogic: FunctionSwapper = FunctionSwapper(initialLogic: {
-        print("🔍 Traffic normal.")
-    })
-    let realityFork = RealityFork()
-    let mlDetector = TrafficAnomalyDetector()
+	var requestRate = TimeVariable<Int>(initial: 0)
+	lazy var detectionLogic: FunctionSwapper = FunctionSwapper(initialLogic: {
+		print("🔍 Traffic normal.")
+	})
+	let realityFork = RealityFork()
+	let mlDetector = TrafficAnomalyDetector()
 
-    init() {
-        realityFork.register(.alpha) {
-            print("🌱 Alpha Fork: Normalized behavior profile.")
-        }
-        realityFork.register(.omega) {
-            print("🔥 Omega Fork: Polymorphic logic running...")
-        }
-    }
+	// Firewall related
+	private var blockedIPs: Set<String> = []
+	private let queue = DispatchQueue(label: "com.hammer4d.firewall", attributes: .concurrent)
 
-    func analyzeTraffic(rate: Int) {
-        requestRate.value = rate
-        print("📈 Request Rate: \(rate)/sec")
+	init() {
+		realityFork.register(.alpha) {
+			print("🌱 Alpha Fork: Normalized behavior profile.")
+		}
+		realityFork.register(.omega) {
+			print("🔥 Omega Fork: Polymorphic logic running...")
+		}
+	}
 
-        if mlDetector?.isAnomalous(rate: rate) == true || rate > 200 {
-            print("🚨 Anomaly or High traffic detected!")
-            requestRate.rewind()
-            detectionLogic.mutate(newLogic: {
-                print("🧠 Detection logic mutated!")
-            })
-            realityFork.switchTo(.omega)
-            realityFork.run()
-        } else {
-            realityFork.switchTo(.alpha)
-            detectionLogic.mutate(newLogic: {
-                print("🔍 Traffic normal.")
-            })
-            realityFork.run()
-        }
-    }
+	func analyzeTraffic(rate: Int) {
+		requestRate.value = rate
+		print("📈 Request Rate: \(rate)/sec")
+
+		if mlDetector?.isAnomalous(rate: rate) == true || rate > 200 {
+			print("🚨 Anomaly or High traffic detected!")
+			requestRate.rewind()
+			detectionLogic.mutate(newLogic: {
+				print("🧠 Detection logic mutated!")
+			})
+			realityFork.switchTo(.omega)
+			realityFork.run()
+		} else {
+			realityFork.switchTo(.alpha)
+			detectionLogic.mutate(newLogic: {
+				print("🔍 Traffic normal.")
+			})
+			realityFork.run()
+		}
+	}
+
+	func isBlocked(ip: String) -> Bool {
+		var result = false
+		queue.sync {
+			result = blockedIPs.contains(ip)
+		}
+		return result
+	}
+
+	func block(ip: String) {
+		_ = queue.sync { blockedIPs.insert(ip) }
+		print("🚫 Blocked IP: \(ip)")
+		let command = "echo 'block drop from \(ip) to any' | sudo pfctl -a com.hammer4d -f -"
+		shell(command)
+	}
 }
 
-// MARK: - TCP Listener for Real Network Input
+// MARK: - Shell helper
+
+@discardableResult
+func shell(_ command: String) -> Int32 {
+	let task = Process()
+	task.launchPath = "/bin/bash"
+	task.arguments = ["-c", command]
+	task.launch()
+	task.waitUntilExit()
+	return task.terminationStatus
+}
+
+// MARK: - TCP Listener for Multiple Selected Ports with SSH Banner mimicry
 
 class TCPListener {
-    private let port: NWEndpoint.Port
-    private var listener: NWListener?
-    private var connectionCountThisSecond = 0
-    private var defender: Hammer4DDefenderCore
-    private var timer: DispatchSourceTimer?
+	private let ports: [UInt16]
+	private var listeners: [NWListener] = []
+	private var connectionCounts: [UInt16: Int] = [:]
+	private let defender: Hammer4DDefenderCore
+	private var timer: DispatchSourceTimer?
 
-    init(port: UInt16, defender: Hammer4DDefenderCore) {
-        self.port = NWEndpoint.Port(rawValue: port)!
-        self.defender = defender
-    }
+	init(defender: Hammer4DDefenderCore, ports: [UInt16]) {
+		self.defender = defender
+		self.ports = ports
+	}
 
-    func start() {
-        do {
-            listener = try NWListener(using: .tcp, on: port)
-        } catch {
-            print("❌ Failed to create listener on port \(port): \(error)")
-            return
-        }
+	func start() {
+		for port in ports {
+			do {
+				let listener = try NWListener(using: .tcp, on: NWEndpoint.Port(rawValue: port)!)
+				connectionCounts[port] = 0
 
-        listener?.stateUpdateHandler = { state in
-            switch state {
-            case .ready:
-                print("📡 Listening on TCP port \(self.port)...")
-            case .failed(let error):
-                print("❌ Listener failed on port \(self.port): \(error)")
-                self.stop()
-            default:
-                break
-            }
-        }
+				listener.stateUpdateHandler = { state in
+					switch state {
+					case .ready:
+						print("📡 Listening on TCP port \(port)...")
+					case .failed(let error):
+						print("❌ Listener on port \(port) failed: \(error)")
+					default:
+						break
+					}
+				}
 
-        listener?.newConnectionHandler = { [weak self] connection in
-            guard let self = self else { return }
-            self.connectionCountThisSecond += 1
-            self.handleConnection(connection)
-        }
+				listener.newConnectionHandler = { [weak self] connection in
+					guard let self = self else { return }
 
-        listener?.start(queue: .main)
+					// Extract IP address string (approximate)
+					var remoteIP = "unknown"
+					if case let NWEndpoint.hostPort(host, _) = connection.endpoint {
+						remoteIP = host.debugDescription
+					}
 
-        timer = DispatchSource.makeTimerSource(queue: .main)
-        timer?.schedule(deadline: .now() + 1, repeating: 1)
-        timer?.setEventHandler { [weak self] in
-            guard let self = self else { return }
-            let rate = self.connectionCountThisSecond
-            self.connectionCountThisSecond = 0
-            print("\n⏱️ Port \(self.port) second tick:")
-            self.defender.analyzeTraffic(rate: rate)
-        }
-        timer?.resume()
-    }
+					if self.defender.isBlocked(ip: remoteIP) {
+						print("⛔ Connection from blocked IP \(remoteIP) rejected.")
+						connection.cancel()
+						return
+					}
 
-    func handleConnection(_ connection: NWConnection) {
-        connection.stateUpdateHandler = { state in
-            switch state {
-            case .ready:
-                break
-            case .failed(let error):
-                print("❌ Connection failed: \(error)")
-            case .cancelled:
-                break
-            default:
-                break
-            }
-        }
-        connection.start(queue: .main)
-    }
+					self.connectionCounts[port, default: 0] += 1
 
-    func stop() {
-        listener?.cancel()
-        timer?.cancel()
-        print("🛑 Listener stopped on port \(port).")
-    }
+					self.handleConnection(connection, port: port, remoteIP: remoteIP)
+				}
+
+				listener.start(queue: .global())
+				listeners.append(listener)
+			} catch {
+				print("❌ Failed to create listener on port \(port): \(error)")
+			}
+		}
+
+		timer = DispatchSource.makeTimerSource(queue: .global())
+		timer?.schedule(deadline: .now() + 1, repeating: 1)
+		timer?.setEventHandler { [weak self] in
+			guard let self = self else { return }
+			let totalConnections = self.connectionCounts.values.reduce(0, +)
+			self.connectionCounts = [:]
+			print("\n⏱️ Total connections last second: \(totalConnections)")
+			self.defender.analyzeTraffic(rate: totalConnections)
+		}
+		timer?.resume()
+	}
+
+	func handleConnection(_ connection: NWConnection, port: UInt16, remoteIP: String) {
+		connection.stateUpdateHandler = { state in
+			switch state {
+			case .ready:
+				// Send SSH banner mimic on ready connection
+				let banner = "SSH-2.0-OpenSSH_7.9p1 Debian-10+deb9u2\r\n"
+				connection.send(content: banner.data(using: .utf8), completion: .contentProcessed({ error in
+					if let error = error {
+						print("❌ Error sending banner: \(error)")
+					}
+					connection.cancel() // Close after sending banner to mimic SSH
+				}))
+			case .failed(let error):
+				print("❌ Connection on port \(port) failed: \(error)")
+			case .cancelled:
+				break
+			default:
+				break
+			}
+		}
+		connection.start(queue: .global())
+	}
+
+	func stop() {
+		listeners.forEach { $0.cancel() }
+		timer?.cancel()
+		print("🛑 All listeners stopped.")
+	}
 }
 
 // MARK: - Main
 
 func main() {
-    print("=== 🛡 Hammer4D Defender v4 with CoreML Anomaly Detection ===")
+	print("=== 🛡 Hammer4D Firewall Defender with SSH mimic on selected ports ===")
 
-    let ports: [UInt16]
-    if CommandLine.arguments.count > 1 {
-        ports = CommandLine.arguments.dropFirst().compactMap { UInt16($0) }
-    } else {
-        ports = [8080, 8081, 9090] // Default ports
-    }
+	// You can change this array to any list of ports you want to monitor
+	let selectedPorts: [UInt16] = [22, 80, 443, 2222]
 
-    var listeners: [TCPListener] = []
+	let defender = Hammer4DDefenderCore()
+	let tcpListener = TCPListener(defender: defender, ports: selectedPorts)
+	tcpListener.start()
 
-    for port in ports {
-        let defender = Hammer4DDefenderCore()
-        let listener = TCPListener(port: port, defender: defender)
-        listener.start()
-        listeners.append(listener)
-    }
-
-    dispatchMain() // Keep the main thread alive
+	RunLoop.main.run()
 }
 
 main()
