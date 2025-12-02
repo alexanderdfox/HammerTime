@@ -15,6 +15,29 @@
 
 ---
 
+## 📁 Project Structure
+
+```
+HammerTime/
+├── src/              # Source code (Swift, C)
+│   ├── hammer.swift
+│   └── PacketSniffer.c
+├── include/          # Header files
+│   ├── PacketSniffer.h
+│   └── Bridging-Header.h
+├── docs/             # Documentation
+│   ├── DEBUG.md
+│   ├── IMPROVEMENTS.md
+│   └── ...
+├── ml_model/         # ML model training
+│   ├── train_anomaly_model.py
+│   └── AnomalyDetector.mlmodel
+├── build/            # Build output (generated)
+├── CompiledModel/    # Compiled ML models (generated)
+├── Makefile          # Build configuration
+└── README.md         # This file
+```
+
 ## 📦 Installation
 
 1. **Clone the repo**
@@ -24,9 +47,24 @@ git clone https://github.com/alexanderdfox/HammerTime.git
 cd HammerTime
 ```
 
-2. **Open in Xcode**
+2. **Build the project**
 
-Ensure you are using **Xcode 14+** and **Swift 5.7+**.
+```bash
+make
+```
+
+Or use the Makefile directly:
+
+```bash
+# Build the project
+make
+
+# Build and run
+make run
+
+# Build with debug symbols
+make debug
+```
 
 3. **Add CoreML Model**
 
@@ -51,13 +89,42 @@ python train_anomaly_model.py
 
 ## 🛠 Usage
 
-Simply run the main Swift file:
+### Using Makefile (Recommended)
 
 ```bash
-swift run
+# Build the project
+make
+
+# Build and run
+make run
+
+# Build with debug symbols
+make debug
+
+# Build optimized release
+make release
+
+# Train ML model
+make train-model
+
+# See all options
+make help
 ```
 
-Or hit the ▶️ **Run** button in Xcode. It starts a TCP listener on port **8080**, tracking traffic per second.
+### Direct Execution
+
+```bash
+# After building
+./build/bin/Hammer4DDefender
+
+# With debug mode
+./build/bin/Hammer4DDefender --debug
+
+# With verbose logging
+./build/bin/Hammer4DDefender --verbose
+```
+
+The application starts TCP listeners on ports **22, 80, 443, 2222** by default, tracking traffic per second.
 
 ---
 

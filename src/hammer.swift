@@ -51,7 +51,7 @@ enum Logger {
 			// Don't clear screen for errors, just print
 			let data = (message + "\n").data(using: .utf8) ?? Data()
 			FileHandle.standardError.write(data)
-			FileHandle.standardError.synchronizeFile()
+			fflush(stderr) // Use fflush instead of synchronizeFile
 		} else {
 			clearAndPrint(message)
 		}
@@ -333,12 +333,24 @@ class TrafficAnomalyDetector {
 			Logger.log("   📍 Using custom model path: \(customPath)", log: Logger.ml)
 		} else {
 			// Try multiple common locations
-			let currentDir = FileManager.default.currentDirectoryPath
-			let defaultPath = URL(fileURLWithPath: currentDir)
-				.appendingPathComponent("CompiledModel")
-				.appendingPathComponent("AnomalyDetector.mlmodelc")
-			path = defaultPath
-			Logger.log("   📍 Using default model path: \(defaultPath.path)", log: Logger.ml)
+			// First, try relative to executable location
+			if let executablePath = Bundle.main.executablePath {
+				let executableURL = URL(fileURLWithPath: executablePath)
+				let projectRoot = executableURL.deletingLastPathComponent().deletingLastPathComponent() // Go up from build/bin/
+				let defaultPath = projectRoot
+					.appendingPathComponent("CompiledModel")
+					.appendingPathComponent("AnomalyDetector.mlmodelc")
+				path = defaultPath
+				Logger.log("   📍 Using default model path: \(defaultPath.path)", log: Logger.ml)
+			} else {
+				// Fallback to current directory
+				let currentDir = FileManager.default.currentDirectoryPath
+				let defaultPath = URL(fileURLWithPath: currentDir)
+					.appendingPathComponent("CompiledModel")
+					.appendingPathComponent("AnomalyDetector.mlmodelc")
+				path = defaultPath
+				Logger.log("   📍 Using default model path: \(defaultPath.path)", log: Logger.ml)
+			}
 		}
 		
 		do {
