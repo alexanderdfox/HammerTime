@@ -1,0 +1,37 @@
+# HammerTime configuration
+
+# Ports to listen on (honeypot / monitoring)
+ports = [22, 80, 443, 2222]
+
+# Global connections-per-second threshold that triggers anomaly response
+anomaly_threshold = 200
+
+# Maximum history size for temporal tracking
+max_history_size = 1000
+
+# Apply real firewall rules (set false for dry-run / testing)
+enable_firewall = true
+
+# Firewall backend: "auto", "iptables", "nftables", "pf", "none"
+firewall_backend = "auto"
+
+# Path to persistent blocklist (JSON). Comment out or set null to disable.
+blocklist_path = "blocklist.json"
+
+# Per-IP rate limit (connections per window). 0 = disabled
+per_ip_rate_limit = 15
+per_ip_window_secs = 1
+
+# Temporary block duration in seconds (0 = permanent until restart)
+block_duration_secs = 3600
+
+# IPs / CIDRs that must never be blocked
+whitelist = [
+    "127.0.0.1/32",
+    "::1/128",
+    # "10.0.0.0/8",
+    # "192.168.0.0/16",
+]
+
+# SSH banner returned by the honeypot
+ssh_banner = "SSH-2.0-OpenSSH_7.9p1 Debian-10+deb9u2\r\n"
